@@ -2,3 +2,13 @@ authentication basics,
 json web token 
 autorization heade
 creating your own authenticationlocal storage
+
+
+
+
+if we use  //const decodedData=jwt.verify(token,JWT_SECRET); {jswauth.js}
+    const decodeData=jwt.decode(token);
+    const decode instead of verify any user can acces my site instead of verifying the token 
+    they jyst decode it so always use verify 
+
+    
