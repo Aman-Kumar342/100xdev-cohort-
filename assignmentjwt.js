@@ -1,87 +1,114 @@
- /*
- create an auth middle ware  
- can you try creatingg a middle ware called auth that verifies if a user 
- is loges in and ends the request early if the user isnt loggesd im
- */
-
-const express=require ("express");
+const express = require("express");
 const jwt = require("jsonwebtoken");
+const cors = require("cors");
 
+const JWT_SECRET = "AMAN123";
 
-const JWT_SECRET="AMAN123";
-
-const app=express();
+const app = express();
+app.use(cors()); // Enable CORS
 app.use(express.json());
-const users=[];
-app.post("/signup",function(req,res){
-    const username=req.body.username
-    const password=req.body.password
+
+const users = [];
+
+function logger(req, res, next) {
+    console.log(req.method + " request came");
+    next(); // You missed this line before!
+}
+
+// Serve frontend
+app.get("/", function (req, res) {
+    res.sendFile(__dirname + "/public/index.html");
+});
+
+// Signup route
+app.post("/signup", logger, function (req, res) {
+    const username = req.body.username;
+    const password = req.body.password;
     users.push({
-        username:username,
-        password:password
-    })
+        username: username,
+        password: password,
+    });
     res.json({
-        message:" you are signed in"
+        message: "you are signed in",
     });
 });
 
-app.post("/signin",function(req,res){
-    const username=req.body.username
-    const password=req.body.password
+// Signin route
+app.post("/signin", logger, function (req, res) {
+    const username = req.body.username;
+    const password = req.body.password;
 
-    let founduser=null;
-    for(let i=0;i<users.length;i++){
-        if(users[i].username===username && users[i].password===password){
-            founduser=users[i]
+    let founduser = null;
+    for (let i = 0; i < users.length; i++) {
+        if (users[i].username === username && users[i].password === password) {
+            founduser = users[i];
         }
     }
-    if(!founduser){
+    if (!founduser) {
+        res.status(401).json({
+            message: "credential is incorrect",
+        });
+        return;
+    } else {
+        const token = jwt.sign(
+            {
+                username: founduser.username,
+            },
+            JWT_SECRET
+        );
+        res.header("jwt", token);
         res.json({
-            message:" credential is incorrect"
-        })
-        return 
+            token: token,
+        });
     }
-    else{
-        const token=jwt.sign({
-            username:"Aman"
-        }, JWT_SECRET);
-        res.header("jwt",token);
-        res.header("random","Amans")
-        res.json({
-            token:token
-        })
+});
+
+// Middleware to verify token
+function auth(req, res, next) {
+    const token = req.headers.authorization;
+
+    if (!token) {
+        return res.status(401).json({
+            message: "No token provided",
+        });
     }
 
-})
-
-// middle ware
-
-function auth(req,res,next){
-    const token=req.header.token;
-    const decodedData=jwt.verify(token,JWT_SECRET);
-    if(decodedData.username){
-        req.username=decodedData.username;
-        next()
-    }
-    else{
-        res.json({
-            message:"You are not logged in"
-        })
+    try {
+        const decodedData = jwt.verify(token, JWT_SECRET);
+        if (decodedData.username) {
+            req.username = decodedData.username;
+            next();
+        } else {
+            res.status(403).json({
+                message: "Invalid token",
+            });
+        }
+    } catch (e) {
+        res.status(403).json({
+            message: "Token verification failed",
+        });
     }
 }
 
-
-app.get("/me",auth,function(req,res){
-        let founduser=null;
-    for(let i=0;i<users.length;i++){
-        if(users[i].username===req.username){
-            founduser=users[i]
+// Protected route to get user info
+app.get("/me", logger, auth, function (req, res) {
+    let founduser = null;
+    for (let i = 0; i < users.length; i++) {
+        if (users[i].username === req.username) {
+            founduser = users[i];
         }
     }
-    res.json({
-        username:founduser.username,
-        password:founduser.password
-    })
 
-})
+    if (founduser) {
+        res.json({
+            username: founduser.username,
+            password: founduser.password,
+        });
+    } else {
+        res.status(404).json({
+            message: "User not found",
+        });
+    }
+});
+
 app.listen(3000);
