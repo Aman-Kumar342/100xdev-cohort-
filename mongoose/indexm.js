@@ -6,7 +6,7 @@ const app = express();
 const mongoose=require("mongoose");
 const jwt_SECRET = "asdas123@123";
 
-mongoose.connect("mongodb+srv://amantop102525:hHAHI7h8uoOZOOeK@cluster0.xenku0q.mongodb.net/todo-aman-2");
+mongoose.connect("mongodb+srv://amantop102525:hHAHI7h8uoOZ0OeK@cluster0.xenku0q.mongodb.net/todo-aman-2");
 
 app.use(express.json());
 

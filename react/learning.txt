@@ -1,0 +1,2 @@
+static and dynamic websit 
+for sttic website we dont need react but for dynamic website we need react
